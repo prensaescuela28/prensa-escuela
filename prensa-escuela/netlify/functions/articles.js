@@ -15,6 +15,8 @@ exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: CORS, body: '' };
 
   if (event.httpMethod === 'GET') {
+    const q=event.queryStringParameters||{};
+    if(q.slug){ if(!auth(event)) return {statusCode:401,headers:CORS,body:JSON.stringify({error:'Clave incorrecta.'})}; const article=await store.get(`article:${q.slug}`,{type:'json'}); if(!article)return {statusCode:404,headers:CORS,body:JSON.stringify({error:'Noticia no encontrada.'})}; return {statusCode:200,headers:{...CORS,'Content-Type':'application/json'},body:JSON.stringify(article)}; }
     const index = (await store.get('index', { type: 'json' })) || [];
     index.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
     if (event.queryStringParameters && event.queryStringParameters.stats === '1') {
@@ -52,10 +54,21 @@ exports.handler = async (event) => {
     if (!entry) return { statusCode: 404, headers: CORS, body: JSON.stringify({ error: 'Noticia no encontrada.' }) };
     const article = await store.get(`article:${slug}`, { type: 'json' }); if (!article) return { statusCode: 404, headers: CORS, body: JSON.stringify({ error: 'Noticia no encontrada.' }) };
     let data = {}; try { data = JSON.parse(event.body || '{}'); } catch {}
+    if (data.title !== undefined) article.title=String(data.title).trim();
+    if (data.author !== undefined) article.author=String(data.author).trim();
+    if (data.category !== undefined) article.category=String(data.category).trim();
+    if (data.content !== undefined) article.content=String(data.content).trim();
+    if (data.videoUrl !== undefined) article.videoUrl=String(data.videoUrl||'').trim();
+    if (data.audioUrl !== undefined) article.audioUrl=String(data.audioUrl||'').trim();
     if (data.featured === true) { index.forEach(a => a.featured = a.slug === slug); article.featured = true; }
     if (data.featured === false) { entry.featured = false; article.featured = false; }
+    if (data.removeImage === true && article.hasImage) { await store.delete(`image:${slug}`); article.hasImage=false; }
+    if (data.imageBase64 && data.imageType) { await store.set(`image:${slug}`, Buffer.from(data.imageBase64,'base64'), {metadata:{contentType:data.imageType}}); article.hasImage=true; }
+    article.excerpt=article.content.replace(/\s+/g,' ').trim().slice(0,180);
+    article.editedAt=new Date().toISOString();
+    Object.assign(entry,{title:article.title,author:article.author,category:article.category,excerpt:article.excerpt,featured:!!article.featured,hasImage:!!article.hasImage,videoUrl:article.videoUrl||'',audioUrl:article.audioUrl||''});
     await store.setJSON(`article:${slug}`, article); await store.setJSON('index', index);
-    return { statusCode: 200, headers: { ...CORS, 'Content-Type': 'application/json' }, body: JSON.stringify({ ok: true, featured: article.featured }) };
+    return { statusCode: 200, headers: { ...CORS, 'Content-Type': 'application/json' }, body: JSON.stringify({ ok: true, article }) };
   }
 
   if (event.httpMethod === 'DELETE') {
