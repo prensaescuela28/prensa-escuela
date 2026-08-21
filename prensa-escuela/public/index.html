@@ -1,77 +1,23 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Prensa Escuela</title>
-<meta name="description" content="Noticias y columnas de opinión escritas por el equipo de prensa del colegio.">
-<link rel="icon" type="image/png" href="/escudo.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles.css">
-</head>
-<body>
-<header class="masthead">
-  <img class="masthead-crest" src="/escudo.png" alt="Escudo de la Escuela Normal Superior de Manatí">
-  <div class="masthead-edition" id="edition-date">EDICIÓN DIGITAL</div>
-  <h1 class="masthead-title">Prensa Escuela</h1>
-  <div class="masthead-rule"></div>
-  <div class="masthead-actions">
-    <a class="masthead-admin-link" href="/admin.html">Publicar una noticia →</a>
-  </div>
-</header>
-
-<main class="front-page">
-  <div id="status" class="front-page-status">Cargando la edición de hoy…</div>
-  <div id="grid" class="grid" hidden></div>
-</main>
-
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Prensa Normalista — Escuela Normal Superior de Manatí</title><meta name="description" content="Noticias, voces estudiantiles, entrevistas y contenidos de la Escuela Normal Superior de Manatí."><link rel="icon" type="image/png" href="/escudo.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="/styles.css"></head><body>
+<header class="masthead"><a href="/" class="masthead-link"><img class="masthead-crest" src="/escudo.png" alt="Escudo de la Escuela Normal Superior de Manatí"><div class="masthead-edition" id="edition-date">EDICIÓN DIGITAL</div><h1 class="masthead-title">Prensa Normalista</h1><p class="masthead-subtitle">Informar · Investigar · Crear · Participar</p><div class="masthead-rule"></div></a><nav class="main-nav"><a href="/">Inicio</a><a href="/#secciones">Secciones</a><a href="/voz.html">Voz estudiantil</a><a href="/equipo.html">Nuestro equipo</a><a href="/admin.html">Administrar</a></nav></header>
+<main class="front-page"><section class="welcome"><div><span class="kicker">PERIÓDICO ESCOLAR DIGITAL</span><h2>La escuela también tiene algo que contar.</h2><p>Un espacio para conocer lo que hacemos, pensar lo que vivimos y escuchar las voces de nuestra comunidad educativa.</p></div><a class="outline-btn" href="/voz.html">Quiero publicar mi voz →</a></section>
+<section id="featured-section" hidden><div class="section-heading"><h2>En portada</h2><a href="#secciones">Ver todo</a></div><div id="featured"></div></section>
+<section class="tools"><div class="search-box"><label for="search">Buscar en Prensa Normalista</label><input id="search" type="search" placeholder="Escribe una palabra, tema o autor…"></div><div class="filter-box"><label for="category-filter">Sección</label><select id="category-filter"><option value="all">Todas las secciones</option><option value="Noticia">Noticias</option><option value="Columna de Opinión">Opinión</option><option value="Voz estudiantil">Voz estudiantil</option><option value="Entrevista">Entrevistas</option><option value="Crónica">Crónicas</option><option value="Literatura">Literatura</option><option value="Territorio">Territorio</option></select></div></section>
+<section id="secciones"><div class="section-heading"><h2>Últimas publicaciones</h2><span id="result-count"></span></div><div id="status" class="front-page-status">Cargando la edición…</div><div id="grid" class="grid" hidden></div><div id="no-results" class="empty-state" hidden>No encontramos publicaciones con esos criterios.</div></section>
+<section class="home-columns"><div><div class="section-heading"><h2>Más leídas</h2></div><ol id="most-read" class="most-read"><li>Cargando…</li></ol></div><div><div class="section-heading"><h2>Archivo</h2></div><div id="archive" class="archive-list">Cargando…</div></div></section>
+<section class="cta-student"><div><span class="kicker">TU VOZ CUENTA</span><h2>¿Tienes algo que decir, investigar o crear?</h2><p>Envía tu texto para revisión editorial. Puede ser una opinión, crónica, reseña, entrevista, poema o reflexión.</p></div><a class="btn" href="/voz.html">Enviar texto</a></section>
+</main><footer class="site-footer"><strong>Prensa Normalista</strong><span>Escuela Normal Superior de Manatí</span><a href="/equipo.html">Conoce el equipo</a></footer>
 <script>
-  document.getElementById('edition-date').textContent =
-    'EDICIÓN DIGITAL · ' + new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
-
-  async function loadArticles() {
-    const statusEl = document.getElementById('status');
-    const gridEl = document.getElementById('grid');
-    try {
-      const res = await fetch('/api/articles');
-      if (!res.ok) throw new Error('respuesta no válida');
-      const articles = await res.json();
-
-      if (!articles.length) {
-        statusEl.innerHTML = 'Todavía no hay noticias publicadas. <br>El equipo de prensa puede <a href="/admin.html">publicar la primera</a>.';
-        return;
-      }
-
-      statusEl.hidden = true;
-      gridEl.hidden = false;
-      gridEl.innerHTML = articles.map(renderCard).join('');
-    } catch (err) {
-      statusEl.innerHTML = '<strong>No se pudo cargar la edición.</strong><br>Actualiza la página o inténtalo de nuevo en un momento.';
-    }
-  }
-
-  function renderCard(a) {
-    const tagClass = a.category === 'Columna de Opinión' ? 'tag--opinion' : 'tag--noticia';
-    const date = new Date(a.publishedAt).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
-    const image = a.hasImage
-      ? `<img class="card-image" src="/api/image?slug=${a.slug}" alt="${escapeHtml(a.title)}">`
-      : `<div class="card-image card-image--placeholder">SIN FOTO</div>`;
-    return `
-      <a class="card" href="/noticia/${a.slug}">
-        ${image}
-        <span class="tag ${tagClass}">${escapeHtml(a.category)}</span>
-        <h2 class="card-title">${escapeHtml(a.title)}</h2>
-        <p class="card-excerpt">${escapeHtml(a.excerpt)}</p>
-        <p class="card-byline">Por ${escapeHtml(a.author)} · ${date}</p>
-      </a>`;
-  }
-
-  function escapeHtml(str) {
-    return String(str).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  }
-
-  loadArticles();
-</script>
-</body>
-</html>
+let articles=[];
+document.getElementById('edition-date').textContent='EDICIÓN DIGITAL · '+new Date().toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'});
+async function load(){const status=document.getElementById('status');try{const r=await fetch('/api/articles');if(!r.ok)throw 0;articles=await r.json();renderAll();loadStats();}catch(e){status.innerHTML='<strong>No se pudo cargar la edición.</strong><br>Actualiza la página e inténtalo de nuevo.'}}
+function renderAll(){document.getElementById('status').hidden=true;renderFeatured();renderGrid();renderArchive();}
+function renderFeatured(){const a=articles.find(x=>x.featured)||articles[0];if(!a)return;document.getElementById('featured-section').hidden=false;document.getElementById('featured').innerHTML=featureCard(a)}
+function featureCard(a){const img=a.hasImage?`<img src="/api/image?slug=${encodeURIComponent(a.slug)}" alt="${esc(a.title)}">`:'<div class="feature-placeholder">PRIMERA PLANA</div>';return `<a class="feature-card" href="/noticia/${encodeURIComponent(a.slug)}">${img}<div><span class="tag ${tag(a)}">${esc(a.category)}</span><h3>${esc(a.title)}</h3><p>${esc(a.excerpt)}</p><span class="card-byline">Por ${esc(a.author)} · ${date(a.publishedAt)}</span></div></a>`}
+function renderGrid(){const q=document.getElementById('search').value.toLowerCase().trim(),cat=document.getElementById('category-filter').value;const list=articles.filter(a=>(!q||[a.title,a.author,a.category,a.excerpt].join(' ').toLowerCase().includes(q))&&(cat==='all'||a.category===cat||a.category.toLowerCase().includes(cat.toLowerCase())));const grid=document.getElementById('grid'),empty=document.getElementById('no-results');grid.innerHTML=list.map(card).join('');grid.hidden=!list.length;empty.hidden=!!list.length;document.getElementById('result-count').textContent=`${list.length} publicación${list.length===1?'':'es'}`}
+function card(a){const image=a.hasImage?`<img class="card-image" src="/api/image?slug=${encodeURIComponent(a.slug)}" alt="${esc(a.title)}">`:'<div class="card-image card-image--placeholder">SIN FOTO</div>';return `<a class="card" href="/noticia/${encodeURIComponent(a.slug)}">${image}<span class="tag ${tag(a)}">${esc(a.category)}</span><h3 class="card-title">${esc(a.title)}</h3><p class="card-excerpt">${esc(a.excerpt)}</p><p class="card-byline">Por ${esc(a.author)} · ${date(a.publishedAt)}</p></a>`}
+async function loadStats(){try{const r=await fetch('/api/articles?stats=1');const d=await r.json();const top=(d.articles||[]).sort((a,b)=>b.views-a.views).slice(0,5);document.getElementById('most-read').innerHTML=top.length?top.map((a,i)=>`<li><span class="rank">0${i+1}</span><a href="/noticia/${encodeURIComponent(a.slug)}">${esc(a.title)}</a><small>${a.views||0} visitas</small></li>`).join(''):'<li>Aún no hay datos de lectura.</li>'}catch(e){}}
+function renderArchive(){const years={};articles.forEach(a=>{const y=new Date(a.publishedAt).getFullYear();years[y]=(years[y]||0)+1});document.getElementById('archive').innerHTML=Object.keys(years).sort((a,b)=>b-a).map(y=>`<div><strong>${y}</strong><span>${years[y]} publicación${years[y]===1?'':'es'}</span></div>`).join('')||'Sin publicaciones';}
+function date(x){return new Date(x).toLocaleDateString('es-CO',{day:'numeric',month:'short',year:'numeric'})}function tag(a){return a.category.includes('Opinión')?'tag--opinion':a.category.includes('Voz')?'tag--voice':'tag--noticia'}function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+document.getElementById('search').addEventListener('input',renderGrid);document.getElementById('category-filter').addEventListener('change',renderGrid);load();
+</script></body></html>

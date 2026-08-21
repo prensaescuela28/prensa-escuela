@@ -16,3 +16,13 @@
   from = "/api/image"
   to = "/.netlify/functions/image"
   status = 200
+
+[[redirects]]
+  from = "/api/voices"
+  to = "/.netlify/functions/voices"
+  status = 200
+
+[[redirects]]
+  from = "/api/voice-approve"
+  to = "/.netlify/functions/voice-approve"
+  status = 200
