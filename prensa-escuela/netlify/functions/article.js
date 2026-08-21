@@ -9,7 +9,19 @@ function escapeHtml(str) {
 }
 
 exports.handler = async (event) => {
-  const slug = event.queryStringParameters && event.queryStringParameters.slug;
+  // Netlify puede entregar el slug de dos formas según cómo se procese el redirect:
+  // como query string (?slug=...) o conservando la ruta original (/noticia/...).
+  // Aceptamos ambas para evitar que una noticia válida termine como "no encontrada".
+  const querySlug = event.queryStringParameters && event.queryStringParameters.slug;
+  const pathMatch = (event.path || '').match(/\/noticia\/([^/?#]+)/i);
+  let slug = querySlug || (pathMatch && pathMatch[1]);
+  try {
+    slug = slug ? decodeURIComponent(slug) : '';
+  } catch (e) {
+    slug = '';
+  }
+  slug = String(slug || '').replace(/^\/+|\/+$/g, '');
+
   const siteUrl = process.env.URL || `https://${event.headers.host}`;
 
   const notFound = () => ({
