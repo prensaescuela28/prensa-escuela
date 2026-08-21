@@ -6,7 +6,11 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: 'Falta el parámetro slug.' };
   }
 
-  const store = getStore('articles');
+  const store = getStore({
+    name: 'articles',
+    siteID: process.env.SITE_ID,
+    token: process.env.BLOBS_TOKEN,
+  });
   const result = await store.getWithMetadata(`image:${slug}`, { type: 'arrayBuffer' });
 
   if (!result) {

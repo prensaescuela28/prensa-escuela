@@ -20,7 +20,11 @@ exports.handler = async (event) => {
 
   if (!slug) return notFound();
 
-  const store = getStore('articles');
+  const store = getStore({
+    name: 'articles',
+    siteID: process.env.SITE_ID,
+    token: process.env.BLOBS_TOKEN,
+  });
   const article = await store.get(`article:${slug}`, { type: 'json' });
   if (!article) return notFound();
 
@@ -48,7 +52,9 @@ exports.handler = async (event) => {
 <meta property="og:description" content="${escapeHtml(article.excerpt)}">
 ${imageUrl ? `<meta property="og:image" content="${imageUrl}">` : ''}
 <meta property="og:url" content="${siteUrl}/noticia/${slug}">
+${!imageUrl ? `<meta property="og:image" content="${siteUrl}/escudo.png">` : ''}
 <meta name="twitter:card" content="${imageUrl ? 'summary_large_image' : 'summary'}">
+<link rel="icon" type="image/png" href="/escudo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css">
@@ -56,6 +62,7 @@ ${imageUrl ? `<meta property="og:image" content="${imageUrl}">` : ''}
 <body>
 <header class="masthead">
   <a href="/" class="masthead-link">
+    <img class="masthead-crest" src="/escudo.png" alt="Escudo de la Escuela Normal Superior de Manatí">
     <div class="masthead-edition">EDICIÓN DIGITAL · ${date}</div>
     <h1 class="masthead-title">Prensa Escuela</h1>
     <div class="masthead-rule"></div>

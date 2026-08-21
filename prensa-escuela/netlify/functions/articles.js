@@ -13,14 +13,20 @@ function slugify(text) {
     .slice(0, 80) || 'nota';
 }
 
-const CORS = {
+function getArticlesStore() {
+  return getStore({
+    name: 'articles',
+    siteID: process.env.SITE_ID,
+    token: process.env.BLOBS_TOKEN,
+  });
+}
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type, x-press-password',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 };
 
 exports.handler = async (event) => {
-  const store = getStore('articles');
+  const store = getArticlesStore();
 
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers: CORS, body: '' };
