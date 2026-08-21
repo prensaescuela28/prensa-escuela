@@ -20,6 +20,8 @@ function getArticlesStore() {
     token: process.env.BLOBS_TOKEN,
   });
 }
+
+const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type, x-press-password',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
