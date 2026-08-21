@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Publicar noticia — Prensa Escuela</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="masthead">
+  <a href="/" class="masthead-link">
+    <div class="masthead-edition">ZONA DEL EQUIPO DE PRENSA</div>
+    <h1 class="masthead-title">Prensa Escuela</h1>
+    <div class="masthead-rule"></div>
+  </a>
+</header>
+
+<main class="admin-page">
+
+  <!-- Paso 1: clave del equipo -->
+  <section id="gate">
+    <h2>Entrar con la clave del equipo</h2>
+    <p class="admin-hint">Pídele la clave a tu profesor(a) encargado(a) si no la tienes.</p>
+    <div class="field">
+      <label for="password">Clave del equipo de prensa</label>
+      <input type="password" id="password" autocomplete="off">
+    </div>
+    <button class="btn" id="gate-btn">Entrar</button>
+    <div id="gate-message"></div>
+  </section>
+
+  <!-- Paso 2: formulario de publicación -->
+  <section id="form-section" hidden>
+    <h2>Publicar una noticia o columna</h2>
+    <p class="admin-hint">Completa los datos. Al publicar, quedará visible de inmediato en la portada.</p>
+
+    <form id="article-form">
+      <div class="field">
+        <label for="title">Título</label>
+        <input type="text" id="title" required>
+      </div>
+      <div class="field">
+        <label for="author">Autor(a)</label>
+        <input type="text" id="author" required placeholder="Nombre del estudiante">
+      </div>
+      <div class="field">
+        <label for="category">Tipo de publicación</label>
+        <select id="category">
+          <option value="Noticia">Noticia</option>
+          <option value="Columna de Opinión">Columna de opinión</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="content">Texto de la noticia</label>
+        <textarea id="content" required placeholder="Escribe aquí el cuerpo de la noticia. Deja una línea en blanco entre párrafos."></textarea>
+      </div>
+      <div class="field">
+        <label for="image">Foto (opcional)</label>
+        <input type="file" id="image" accept="image/*">
+      </div>
+      <button class="btn" id="submit-btn" type="submit">Publicar</button>
+      <div id="form-message"></div>
+    </form>
+  </section>
+</main>
+
+<script>
+  const gate = document.getElementById('gate');
+  const formSection = document.getElementById('form-section');
+  const gateMessage = document.getElementById('gate-message');
+  const formMessage = document.getElementById('form-message');
+
+  let pressPassword = sessionStorage.getItem('pressPassword') || '';
+  if (pressPassword) unlock();
+
+  document.getElementById('gate-btn').addEventListener('click', () => {
+    const value = document.getElementById('password').value.trim();
+    if (!value) {
+      gateMessage.className = 'message message--error';
+      gateMessage.textContent = 'Escribe la clave del equipo de prensa.';
+      return;
+    }
+    pressPassword = value;
+    sessionStorage.setItem('pressPassword', value);
+    unlock();
+  });
+
+  function unlock() {
+    gate.hidden = true;
+    formSection.hidden = false;
+  }
+
+  document.getElementById('article-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = document.getElementById('submit-btn');
+    formMessage.className = '';
+    formMessage.textContent = '';
+
+    const title = document.getElementById('title').value.trim();
+    const author = document.getElementById('author').value.trim();
+    const category = document.getElementById('category').value;
+    const content = document.getElementById('content').value.trim();
+    const fileInput = document.getElementById('image');
+    const file = fileInput.files[0];
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Publicando…';
+
+    try {
+      let imageBase64 = null;
+      let imageType = null;
+      if (file) {
+        imageType = file.type;
+        imageBase64 = await fileToBase64(file);
+      }
+
+      const res = await fetch('/api/articles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-press-password': pressPassword },
+        body: JSON.stringify({ title, author, category, content, imageBase64, imageType }),
+      });
+
+      const data = await res.json();
+
+      if (res.status === 401) {
+        // Clave guardada ya no sirve: pedirla de nuevo.
+        sessionStorage.removeItem('pressPassword');
+        gate.hidden = false;
+        formSection.hidden = true;
+        gateMessage.className = 'message message--error';
+        gateMessage.textContent = 'La clave no es correcta. Intenta de nuevo.';
+        return;
+      }
+
+      if (!res.ok) {
+        formMessage.className = 'message message--error';
+        formMessage.textContent = data.error || 'No se pudo publicar. Intenta de nuevo.';
+        return;
+      }
+
+      formMessage.className = 'message message--ok';
+      formMessage.innerHTML = `Publicado. <a href="/noticia/${data.slug}">Ver la noticia →</a>`;
+      document.getElementById('article-form').reset();
+    } catch (err) {
+      formMessage.className = 'message message--error';
+      formMessage.textContent = 'No se pudo conectar con el sitio. Revisa tu conexión e intenta de nuevo.';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Publicar';
+    }
+  });
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+      reader.readAsDataURL(file);
+    });
+  }
+</script>
+</body>
+</html>
