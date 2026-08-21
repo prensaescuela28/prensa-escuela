@@ -66,6 +66,13 @@
       <button class="btn" id="submit-btn" type="submit">Publicar</button>
       <div id="form-message"></div>
     </form>
+
+    <div class="admin-divider"></div>
+
+    <h2>Noticias publicadas</h2>
+    <p class="admin-hint">Elimina una noticia de la portada si ya no debe estar publicada.</p>
+    <div id="list-status" class="front-page-status">Cargando noticias…</div>
+    <ul id="published-list" class="published-list" hidden></ul>
   </section>
 </main>
 
@@ -93,6 +100,79 @@
   function unlock() {
     gate.hidden = true;
     formSection.hidden = false;
+    loadPublishedList();
+  }
+
+  async function loadPublishedList() {
+    const listStatus = document.getElementById('list-status');
+    const listEl = document.getElementById('published-list');
+    try {
+      const res = await fetch('/api/articles');
+      const articles = await res.json();
+
+      if (!articles.length) {
+        listStatus.textContent = 'Todavía no hay noticias publicadas.';
+        listEl.hidden = true;
+        return;
+      }
+
+      listStatus.hidden = true;
+      listEl.hidden = false;
+      listEl.innerHTML = articles.map(renderListItem).join('');
+
+      listEl.querySelectorAll('[data-delete-slug]').forEach((btn) => {
+        btn.addEventListener('click', () => deleteArticle(btn.dataset.deleteSlug, btn));
+      });
+    } catch (err) {
+      listStatus.textContent = 'No se pudo cargar la lista de noticias.';
+    }
+  }
+
+  function renderListItem(a) {
+    const date = new Date(a.publishedAt).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+    return `
+      <li class="published-item">
+        <div>
+          <a href="/noticia/${a.slug}" target="_blank">${escapeAdminHtml(a.title)}</a>
+          <span class="published-meta">${escapeAdminHtml(a.author)} · ${date}</span>
+        </div>
+        <button type="button" class="btn-delete" data-delete-slug="${a.slug}">Eliminar</button>
+      </li>`;
+  }
+
+  function escapeAdminHtml(str) {
+    return String(str).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  }
+
+  async function deleteArticle(slug, btn) {
+    if (!confirm('¿Eliminar esta noticia? No se puede deshacer.')) return;
+    btn.disabled = true;
+    btn.textContent = 'Eliminando…';
+    try {
+      const res = await fetch('/api/articles?slug=' + encodeURIComponent(slug), {
+        method: 'DELETE',
+        headers: { 'x-press-password': pressPassword },
+      });
+      if (res.status === 401) {
+        sessionStorage.removeItem('pressPassword');
+        gate.hidden = false;
+        formSection.hidden = true;
+        gateMessage.className = 'message message--error';
+        gateMessage.textContent = 'La clave no es correcta. Intenta de nuevo.';
+        return;
+      }
+      if (!res.ok) {
+        btn.disabled = false;
+        btn.textContent = 'Eliminar';
+        alert('No se pudo eliminar. Intenta de nuevo.');
+        return;
+      }
+      loadPublishedList();
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = 'Eliminar';
+      alert('No se pudo conectar con el sitio.');
+    }
   }
 
   document.getElementById('article-form').addEventListener('submit', async (e) => {
@@ -146,6 +226,7 @@
       formMessage.className = 'message message--ok';
       formMessage.innerHTML = `Publicado. <a href="/noticia/${data.slug}">Ver la noticia →</a>`;
       document.getElementById('article-form').reset();
+      loadPublishedList();
     } catch (err) {
       formMessage.className = 'message message--error';
       formMessage.textContent = 'No se pudo conectar con el sitio. Revisa tu conexión e intenta de nuevo.';

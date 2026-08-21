@@ -10,6 +10,7 @@ exports.handler = async (event) => {
     name: 'articles',
     siteID: process.env.SITE_ID,
     token: process.env.BLOBS_TOKEN,
+    consistency: 'strong',
   });
   const result = await store.getWithMetadata(`image:${slug}`, { type: 'arrayBuffer' });
 

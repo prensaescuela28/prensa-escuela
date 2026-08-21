@@ -18,13 +18,14 @@ function getArticlesStore() {
     name: 'articles',
     siteID: process.env.SITE_ID,
     token: process.env.BLOBS_TOKEN,
+    consistency: 'strong',
   });
 }
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type, x-press-password',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
 };
 
 exports.handler = async (event) => {
@@ -102,6 +103,43 @@ exports.handler = async (event) => {
       headers: { ...CORS, 'Content-Type': 'application/json' },
       body: JSON.stringify({ slug }),
     };
+  }
+
+  // --- Eliminar una noticia publicada ---
+  if (event.httpMethod === 'DELETE') {
+    const sentPassword = event.headers['x-press-password'] || event.headers['X-Press-Password'];
+    const realPassword = process.env.PRESS_PASSWORD;
+
+    if (!realPassword) {
+      return {
+        statusCode: 500,
+        headers: CORS,
+        body: JSON.stringify({ error: 'El sitio no tiene configurada la clave del equipo de prensa (PRESS_PASSWORD).' }),
+      };
+    }
+    if (sentPassword !== realPassword) {
+      return { statusCode: 401, headers: CORS, body: JSON.stringify({ error: 'Clave incorrecta.' }) };
+    }
+
+    const slug = event.queryStringParameters && event.queryStringParameters.slug;
+    if (!slug) {
+      return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Falta indicar qué noticia eliminar.' }) };
+    }
+
+    const index = (await store.get('index', { type: 'json' })) || [];
+    const entry = index.find((a) => a.slug === slug);
+    if (!entry) {
+      return { statusCode: 404, headers: CORS, body: JSON.stringify({ error: 'Esa noticia ya no existe.' }) };
+    }
+
+    await store.delete(`article:${slug}`);
+    if (entry.hasImage) {
+      await store.delete(`image:${slug}`);
+    }
+    const newIndex = index.filter((a) => a.slug !== slug);
+    await store.setJSON('index', newIndex);
+
+    return { statusCode: 200, headers: { ...CORS, 'Content-Type': 'application/json' }, body: JSON.stringify({ deleted: slug }) };
   }
 
   return { statusCode: 405, headers: CORS, body: 'Método no permitido' };

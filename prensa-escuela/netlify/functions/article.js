@@ -24,6 +24,7 @@ exports.handler = async (event) => {
     name: 'articles',
     siteID: process.env.SITE_ID,
     token: process.env.BLOBS_TOKEN,
+    consistency: 'strong',
   });
   const article = await store.get(`article:${slug}`, { type: 'json' });
   if (!article) return notFound();
