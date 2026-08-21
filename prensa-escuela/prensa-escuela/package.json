@@ -1,0 +1,9 @@
+{
+  "name": "prensa-escuela",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sitio del periódico escolar: noticias y columnas de opinión publicadas por el equipo de prensa.",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}
