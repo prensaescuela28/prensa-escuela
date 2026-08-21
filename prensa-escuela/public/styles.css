@@ -1,12 +1,14 @@
 :root {
-  --paper: #efe9dd;
-  --paper-dim: #e4ddcc;
-  --ink: #1b1b1d;
-  --ink-soft: #514c43;
-  --red: #b23a2e;
-  --teal: #2c5f5d;
-  --gold: #c9a227;
-  --rule: #c7bfae;
+  --paper: #f2f6fa;
+  --paper-dim: #e3ecf4;
+  --ink: #14232f;
+  --ink-soft: #47596a;
+  --sky: #2fa8e0;
+  --navy: #0b4c8c;
+  --red: #c1272d;
+  --green: #2e7d46;
+  --gold: #f2b705;
+  --rule: #c3d2e0;
 }
 
 * { box-sizing: border-box; }
@@ -25,17 +27,29 @@ a { color: inherit; }
 
 /* --- Masthead --- */
 .masthead {
-  border-bottom: 4px double var(--ink);
-  padding: 28px 20px 14px;
+  background: linear-gradient(180deg, var(--sky) 0%, var(--navy) 100%);
+  padding: 26px 20px 18px;
   text-align: center;
-  background: var(--paper);
 }
-.masthead-link { text-decoration: none; color: var(--ink); display: block; }
+.masthead-link {
+  text-decoration: none;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.masthead-crest {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
 .masthead-edition {
   font-family: 'Space Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.18em;
-  color: var(--red);
+  color: var(--gold);
   margin-bottom: 6px;
 }
 .masthead-title {
@@ -44,16 +58,18 @@ a { color: inherit; }
   font-size: clamp(34px, 6vw, 58px);
   margin: 0;
   letter-spacing: -0.01em;
+  color: #fff;
 }
 .masthead-rule {
   height: 2px;
-  background: var(--ink);
+  background: var(--gold);
   margin: 14px auto 0;
   max-width: 640px;
+  width: 100%;
 }
 .masthead-actions {
   max-width: 900px;
-  margin: 10px auto 0;
+  margin: 12px auto 0;
   display: flex;
   justify-content: flex-end;
 }
@@ -61,9 +77,9 @@ a { color: inherit; }
   font-family: 'Space Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.08em;
-  color: var(--ink-soft);
+  color: #fff;
   text-decoration: none;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--gold);
 }
 
 /* --- Tags de categoría --- */
@@ -78,7 +94,7 @@ a { color: inherit; }
   margin-bottom: 10px;
 }
 .tag--noticia { background: var(--red); }
-.tag--opinion { background: var(--teal); }
+.tag--opinion { background: var(--green); }
 
 /* --- Portada / listado --- */
 .front-page {
@@ -176,7 +192,7 @@ a { color: inherit; }
   float: left;
   line-height: 0.8;
   padding: 6px 8px 0 0;
-  color: var(--red);
+  color: var(--navy);
 }
 .back-link {
   display: inline-block;
@@ -246,7 +262,7 @@ a { color: inherit; }
   border-left: 3px solid var(--ink);
 }
 .message--error { border-color: var(--red); color: var(--red); }
-.message--ok { border-color: var(--teal); color: var(--teal); }
+.message--ok { border-color: var(--green); color: var(--green); }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
