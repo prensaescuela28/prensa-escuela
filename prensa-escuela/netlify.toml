@@ -26,3 +26,18 @@
   from = "/api/voice-approve"
   to = "/.netlify/functions/voice-approve"
   status = 200
+
+[[redirects]]
+  from = "/api/team"
+  to = "/.netlify/functions/team"
+  status = 200
+
+[[redirects]]
+  from = "/api/team-image"
+  to = "/.netlify/functions/team-image"
+  status = 200
+
+[[redirects]]
+  from = "/api/voice-feedback"
+  to = "/.netlify/functions/voice-feedback"
+  status = 200
