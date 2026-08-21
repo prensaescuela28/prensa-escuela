@@ -22,3 +22,12 @@ Sitio web de Prensa Escuela de la Escuela Normal Superior de Manatí, construido
 - `PRESS_PASSWORD`
 
 No cambies estas variables si ya están funcionando en el sitio actual.
+
+## Nuevas funciones
+- Laboratorio de Prensa para el equipo, con proyectos por etapas y asistente editorial NORA.
+- IA mediante Gemini API. Configura `GEMINI_API_KEY` en Netlify. El modelo usado es `gemini-2.5-flash`.
+- Clave opcional exclusiva del equipo: `PRESS_TEAM_PASSWORD`. Si no existe, el Laboratorio usa `PRESS_PASSWORD`.
+- Identidad territorial con historias y mapa interactivo.
+- Encuestas con resultados actualizados automáticamente y control administrativo.
+- Reporteros destacados.
+- Especial editorial “Una pregunta, muchas voces”.

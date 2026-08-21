@@ -41,3 +41,33 @@
   from = "/api/voice-feedback"
   to = "/.netlify/functions/voice-feedback"
   status = 200
+
+[[redirects]]
+  from = "/api/lab"
+  to = "/.netlify/functions/lab"
+  status = 200
+
+[[redirects]]
+  from = "/api/ai"
+  to = "/.netlify/functions/ai"
+  status = 200
+
+[[redirects]]
+  from = "/api/surveys"
+  to = "/.netlify/functions/surveys"
+  status = 200
+
+[[redirects]]
+  from = "/api/territory"
+  to = "/.netlify/functions/territory"
+  status = 200
+
+[[redirects]]
+  from = "/api/questions"
+  to = "/.netlify/functions/questions"
+  status = 200
+
+[[redirects]]
+  from = "/api/reporters"
+  to = "/.netlify/functions/reporters"
+  status = 200
