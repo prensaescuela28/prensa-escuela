@@ -1,6 +1,6 @@
 const { getStore } = require('@netlify/blobs');
 const CORS={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'Content-Type, x-press-password','Access-Control-Allow-Methods':'GET, PUT, OPTIONS'};
-const store=()=>getStore({name:'articles',siteID:process.env.SITE_ID,token:process.env.BLOBS_TOKEN,consistency:'strong'});
+const store=()=>getStore(process.env.SITE_ID && process.env.BLOBS_TOKEN ? {name:'articles',siteID:process.env.SITE_ID,token:process.env.BLOBS_TOKEN,consistency:'strong'} : {name:'articles',consistency:'strong'});
 const auth=e=>(e.headers['x-press-password']||e.headers['X-Press-Password'])===process.env.PRESS_PASSWORD&&!!process.env.PRESS_PASSWORD;
 const DEFAULT={intro:'Prensa Normalista es un medio escolar construido con participación de la comunidad educativa.',coordinator:{name:'',role:'Docente coordinador',bio:'',hasPhoto:false},reporters:[],collaborators:[],hasGroupPhoto:false};
 function json(statusCode,body){return{statusCode,headers:{...CORS,'Content-Type':'application/json'},body:JSON.stringify(body)}}

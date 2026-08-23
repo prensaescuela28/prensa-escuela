@@ -1,6 +1,6 @@
 const { getStore } = require('@netlify/blobs');
 const CORS={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'Content-Type, x-press-password','Access-Control-Allow-Methods':'POST, OPTIONS'};
-const store=()=>getStore({name:'articles',siteID:process.env.SITE_ID,token:process.env.BLOBS_TOKEN,consistency:'strong'});
+const store=()=>getStore(process.env.SITE_ID && process.env.BLOBS_TOKEN ? {name:'articles',siteID:process.env.SITE_ID,token:process.env.BLOBS_TOKEN,consistency:'strong'} : {name:'articles',consistency:'strong'});
 const auth=e=>(e.headers['x-press-password']||e.headers['X-Press-Password'])===process.env.PRESS_PASSWORD&&!!process.env.PRESS_PASSWORD;
 const json=(statusCode,body)=>({statusCode,headers:{...CORS,'Content-Type':'application/json'},body:JSON.stringify(body)});
 exports.handler=async e=>{
@@ -16,7 +16,7 @@ exports.handler=async e=>{
    return json(503,{fallback:true,email:item.email,author:item.author,title:item.title,error:'El envío automático de correo no está configurado. Puedes usar la opción Abrir correo para enviar la retroalimentación.'});
  }
  const subject=`Retroalimentación sobre: ${item.title}`;
- const html=`<p>Hola ${escapeHtml(item.author)},</p><p>Gracias por enviar tu texto a <strong>Prensa Normalista</strong>.</p><p><strong>Retroalimentación:</strong></p><div style="white-space:pre-wrap">${escapeHtml(d.feedback)}</div><p>Saludos,<br>Equipo de Prensa Normalista</p>`;
+ const url=(process.env.URL||'https://prensa-normalista.netlify.app').replace(/\/$/,'')+'/voz.html';const html=`<p>Hola ${escapeHtml(item.author)},</p><p>Hemos revisado tu participación en <strong>Voz Estudiantil</strong> y requiere ajustes antes de publicarse.</p><p><strong>Retroalimentación:</strong></p><div style="white-space:pre-wrap">${escapeHtml(d.feedback)}</div><h3>¿Cómo corregirla?</h3><ol><li>Entra a Voz Estudiantil.</li><li>Selecciona <strong>Consultar mi envío</strong>.</li><li>Ingresa tu correo: <strong>${escapeHtml(item.email)}</strong>.</li><li>Coloca el código de tu envío: <strong>${escapeHtml(item.code||'SIN CÓDIGO')}</strong>.</li><li>Lee las observaciones y pulsa <strong>Corregir y volver a enviar</strong>.</li></ol><p><a href="${escapeHtml(url)}">Abrir Voz Estudiantil</a></p><p>Saludos,<br>Equipo de Prensa Normalista</p>`;
  const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${process.env.RESEND_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:process.env.FEEDBACK_FROM_EMAIL,to:[item.email],subject,html})});
  const out=await r.json().catch(()=>({}));
  if(!r.ok)return json(502,{error:out.message||'El servicio de correo no pudo enviar el mensaje.',fallback:true,email:item.email});

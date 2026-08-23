@@ -5,7 +5,7 @@ exports.handler=async event=>{
   let slug=(event.queryStringParameters&&event.queryStringParameters.slug)||'';
   if(!slug && event.path){const m=event.path.match(/\/noticia\/([^/?#]+)/);if(m)slug=decodeURIComponent(m[1]);}
   const siteUrl=process.env.URL||`https://${event.headers.host}`;
-  const store=getStore({name:'articles',siteID:process.env.SITE_ID,token:process.env.BLOBS_TOKEN,consistency:'strong'});
+  const store=getStore(process.env.SITE_ID && process.env.BLOBS_TOKEN ? {name:'articles',siteID:process.env.SITE_ID,token:process.env.BLOBS_TOKEN,consistency:'strong'} : {name:'articles',consistency:'strong'});
   const notFound=()=>({statusCode:404,headers:{'Content-Type':'text/html; charset=utf-8'},body:`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Noticia no encontrada — Prensa Escuela</title><link rel="stylesheet" href="/styles.css"></head><body><main class="article-page"><h1 class="article-title">Esta noticia no existe o fue retirada</h1><a class="back-link" href="/">← Volver a portada</a></main></body></html>`});
   if(!slug)return notFound();
   const article=await store.get(`article:${slug}`,{type:'json'});if(!article)return notFound();

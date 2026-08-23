@@ -3,11 +3,6 @@
   publish = "public"
 
 [[redirects]]
-  from = "/territorio/*"
-  to = "/.netlify/functions/territory-article?id=:splat"
-  status = 200
-
-[[redirects]]
   from = "/noticia/*"
   to = "/.netlify/functions/article?slug=:splat"
   status = 200
@@ -80,4 +75,19 @@
 [[redirects]]
   from = "/api/reporters"
   to = "/.netlify/functions/reporters"
+  status = 200
+
+[[redirects]]
+  from = "/api/lab-media"
+  to = "/.netlify/functions/lab-media"
+  status = 200
+
+[[redirects]]
+  from = "/api/voice-media"
+  to = "/.netlify/functions/voice-media"
+  status = 200
+
+[[redirects]]
+  from = "/api/voice-revise"
+  to = "/.netlify/functions/voice-revise"
   status = 200

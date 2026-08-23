@@ -5,7 +5,7 @@ function slugify(text) {
     .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 80) || 'nota';
 }
 function getStoreSafe() {
-  return getStore({ name: 'articles', siteID: process.env.SITE_ID, token: process.env.BLOBS_TOKEN, consistency: 'strong' });
+  return getStore(process.env.SITE_ID && process.env.BLOBS_TOKEN ? { name: 'articles', siteID: process.env.SITE_ID, token: process.env.BLOBS_TOKEN, consistency: 'strong' } : { name: 'articles', consistency: 'strong' });
 }
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type, x-press-password', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, PUT, OPTIONS' };
 function auth(event) { return (event.headers['x-press-password'] || event.headers['X-Press-Password']) === process.env.PRESS_PASSWORD && !!process.env.PRESS_PASSWORD; }
