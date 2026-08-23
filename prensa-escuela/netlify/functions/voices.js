@@ -1,10 +1,104 @@
-const {getStore}=require('@netlify/blobs');
-const CORS={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'Content-Type,x-press-password','Access-Control-Allow-Methods':'GET,POST,PUT,DELETE,OPTIONS'};const store=()=>getStore({name:'articles',siteID:process.env.SITE_ID,token:process.env.BLOBS_TOKEN,consistency:'strong'});const auth=e=>(e.headers['x-press-password']||e.headers['X-Press-Password'])===process.env.PRESS_PASSWORD&&!!process.env.PRESS_PASSWORD;const json=(s,b)=>({statusCode:s,headers:{...CORS,'Content-Type':'application/json'},body:JSON.stringify(b)});const makeCode=()=>`VE-${new Date().getFullYear()}-${Math.random().toString(36).slice(2,7).toUpperCase()}`;
-async function sync(st,item){const idx=(await st.get('voices-index',{type:'json'}))||[];const i=idx.findIndex(x=>x.id===item.id);const mini={id:item.id,code:item.code,title:item.title,author:item.author,email:item.email,grade:item.grade,type:item.type,submittedAt:item.submittedAt,status:item.status,feedback:item.feedback||'',version:item.version||1,hasImage:!!item.hasImage,videoUrl:item.videoUrl||'',updatedAt:item.updatedAt||null};if(i>=0)idx[i]={...idx[i],...mini};else idx.unshift(mini);await st.setJSON('voices-index',idx);return mini}
-exports.handler=async e=>{const st=store();if(e.httpMethod==='OPTIONS')return{statusCode:200,headers:CORS,body:''};
-if(e.httpMethod==='GET'){const q=e.queryStringParameters||{};if(!auth(e)){if(!q.email||!q.code)return json(400,{error:'Ingresa tu correo y el código de tu envío.'});const idx=(await st.get('voices-index',{type:'json'}))||[];const hit=idx.find(x=>String(x.email).toLowerCase()===String(q.email).toLowerCase()&&x.code===q.code);if(!hit)return json(404,{error:'No encontramos un envío con ese correo y código.'});const item=await st.get(`voice:${hit.id}`,{type:'json'});return json(200,{id:item.id,code:item.code,title:item.title,author:item.author,grade:item.grade,type:item.type,content:item.content,status:item.status,feedback:item.feedback||'',submittedAt:item.submittedAt,version:item.version||1,hasImage:!!item.hasImage,videoUrl:item.videoUrl||''})}const idx=(await st.get('voices-index',{type:'json'}))||[];const full=await Promise.all(idx.map(x=>st.get(`voice:${x.id}`,{type:'json'})));return json(200,full.filter(Boolean))}
-if(e.httpMethod==='POST'){let d;try{d=JSON.parse(e.body||'{}')}catch{return json(400,{error:'Datos inválidos.'})};if(!d.title||!d.author||!d.grade||!d.type||!d.content||!d.email)return json(400,{error:'Completa todos los campos obligatorios, incluido tu correo electrónico.'});const email=String(d.email).trim().toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return json(400,{error:'Escribe un correo electrónico válido.'});if(String(d.content).length<80)return json(400,{error:'El texto debe tener al menos 80 caracteres.'});const id=`${Date.now()}-${Math.random().toString(36).slice(2,8)}`,item={id,code:makeCode(),title:d.title.trim(),author:d.author.trim(),email,grade:d.grade.trim(),type:d.type.trim(),content:d.content.trim(),submittedAt:new Date().toISOString(),status:'pending',feedback:'',feedbackAt:null,feedbackSentAt:null,version:1,hasImage:false,videoUrl:String(d.videoUrl||'').trim()};if(d.imageBase64&&d.imageType){await st.set(`voice-media:image:${id}`,Buffer.from(d.imageBase64,'base64'),{metadata:{contentType:d.imageType}});item.hasImage=true}await st.setJSON(`voice:${id}`,item);await sync(st,item);return json(200,{ok:true,code:item.code})}
-if(e.httpMethod==='PUT' && !auth(e)){let d;try{d=JSON.parse(e.body||'{}')}catch{return json(400,{error:'Datos inválidos.'})};if(!d.id||!d.email||!d.code)return json(400,{error:'Faltan los datos de consulta.'});const item=await st.get(`voice:${d.id}`,{type:'json'});if(!item||item.code!==d.code||String(item.email).toLowerCase()!==String(d.email).toLowerCase())return json(403,{error:'No se pudo verificar este envío.'});if(!['needs_adjustment','reviewed'].includes(item.status))return json(400,{error:'Este envío no está habilitado para corrección.'});if(!d.content||String(d.content).trim().length<80)return json(400,{error:'El texto corregido debe tener al menos 80 caracteres.'});item.content=String(d.content).trim();item.version=(item.version||1)+1;item.status='pending';item.feedback='';item.feedbackAt=null;item.updatedAt=new Date().toISOString();if(d.imageBase64&&d.imageType){await st.set(`voice-media:image:${item.id}`,Buffer.from(d.imageBase64,'base64'),{metadata:{contentType:d.imageType}});item.hasImage=true}if(d.videoUrl!==undefined)item.videoUrl=String(d.videoUrl||'').trim();await st.setJSON(`voice:${item.id}`,item);await sync(st,item);return json(200,{ok:true,code:item.code,version:item.version})}
-if(!auth(e))return json(401,{error:'No autorizado.'});
-if(e.httpMethod==='PUT'){let d;try{d=JSON.parse(e.body||'{}')}catch{return json(400,{error:'Datos inválidos.'})};if(!d.id)return json(400,{error:'Falta el identificador.'});const item=await st.get(`voice:${d.id}`,{type:'json'});if(!item)return json(404,{error:'Texto no encontrado.'});if(d.action==='setStatus'){item.status=String(d.status||item.status);if(d.feedback!==undefined)item.feedback=String(d.feedback||'').trim();item.feedbackAt=item.feedback?new Date().toISOString():item.feedbackAt;item.updatedAt=new Date().toISOString();await st.setJSON(`voice:${item.id}`,item);return json(200,{ok:true,item:await sync(st,item)})}if(typeof d.feedback==='string'){item.feedback=d.feedback.trim();item.feedbackAt=item.feedback?new Date().toISOString():null;if(d.markFeedbackSent)item.feedbackSentAt=new Date().toISOString();item.status=d.status||item.status||'pending'}await st.setJSON(`voice:${item.id}`,item);return json(200,{ok:true,item:await sync(st,item)})}
-if(e.httpMethod==='DELETE'){const id=e.queryStringParameters?.id;if(!id)return json(400,{error:'Falta el identificador.'});await st.delete(`voice:${id}`);await st.delete(`voice-media:image:${id}`);const list=(await st.get('voices-index',{type:'json'}))||[];await st.setJSON('voices-index',list.filter(x=>x.id!==id));return json(200,{ok:true})}return json(405,{error:'Método no permitido.'})};
+const { getStore } = require('@netlify/blobs');
+
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Content-Type, x-press-password',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
+};
+
+const store = () => getStore({
+  name: 'articles',
+  siteID: process.env.SITE_ID,
+  token: process.env.BLOBS_TOKEN,
+  consistency: 'strong'
+});
+
+const auth = e =>
+  (e.headers['x-press-password'] || e.headers['X-Press-Password']) === process.env.PRESS_PASSWORD &&
+  !!process.env.PRESS_PASSWORD;
+
+function slugify(t) {
+  return t.toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase().trim().replace(/[^a-z0-9\s-]/g,'')
+    .replace(/\s+/g,'-').replace(/-+/g,'-').slice(0,70) || 'voz';
+}
+
+function json(statusCode, body) {
+  return { statusCode, headers: {...CORS, 'Content-Type':'application/json'}, body: JSON.stringify(body) };
+}
+
+exports.handler = async event => {
+  const s = store();
+  if (event.httpMethod === 'OPTIONS') return { statusCode:200, headers:CORS, body:'' };
+
+  if (event.httpMethod === 'POST') {
+    let d; try { d=JSON.parse(event.body||'{}'); } catch { return json(400,{error:'Datos inválidos.'}); }
+    if (!d.title || !d.author || !d.grade || !d.type || !d.content || !d.email) {
+      return json(400,{error:'Completa todos los campos obligatorios, incluido tu correo electrónico.'});
+    }
+    const email = String(d.email).trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json(400,{error:'Escribe un correo electrónico válido.'});
+    if (d.content.length < 80) return json(400,{error:'El texto debe tener al menos 80 caracteres.'});
+
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+    const item = {
+      id, title:d.title.trim(), author:d.author.trim(), email, grade:d.grade.trim(),
+      type:d.type.trim(), content:d.content.trim(), submittedAt:new Date().toISOString(),
+      status:'pending', feedback:'', feedbackAt:null, feedbackSentAt:null
+    };
+    await s.setJSON(`voice:${id}`, item);
+    const pending=(await s.get('voices-index',{type:'json'}))||[];
+    pending.unshift({
+      id,title:item.title,author:item.author,email:item.email,grade:item.grade,type:item.type,
+      submittedAt:item.submittedAt,status:'pending',feedback:item.feedback
+    });
+    await s.setJSON('voices-index',pending);
+    return json(200,{ok:true});
+  }
+
+  if (!auth(event)) return json(401,{error:'No autorizado.'});
+
+  if (event.httpMethod === 'GET') {
+    const list=(await s.get('voices-index',{type:'json'}))||[];
+    const full=await Promise.all(list.map(async x => {
+      const item=await s.get(`voice:${x.id}`,{type:'json'});
+      return item ? {
+        id:item.id,title:item.title,author:item.author,email:item.email,grade:item.grade,type:item.type,
+        content:item.content,submittedAt:item.submittedAt,status:item.status,
+        feedback:item.feedback||'',feedbackAt:item.feedbackAt||null,feedbackSentAt:item.feedbackSentAt||null
+      } : x;
+    }));
+    return json(200,full);
+  }
+
+  if (event.httpMethod === 'PUT') {
+    let d; try { d=JSON.parse(event.body||'{}'); } catch { return json(400,{error:'Datos inválidos.'}); }
+    if (!d.id) return json(400,{error:'Falta el identificador.'});
+    const item=await s.get(`voice:${d.id}`,{type:'json'});
+    if(!item) return json(404,{error:'Texto no encontrado.'});
+
+    if (typeof d.feedback === 'string') {
+      item.feedback=d.feedback.trim();
+      item.feedbackAt=item.feedback ? new Date().toISOString() : null;
+      item.status=item.feedback ? 'reviewed' : 'pending';
+    }
+    if (d.markFeedbackSent === true) item.feedbackSentAt=new Date().toISOString();
+    await s.setJSON(`voice:${d.id}`,item);
+    const list=(await s.get('voices-index',{type:'json'}))||[];
+    const idx=list.findIndex(x=>x.id===d.id);
+    if(idx>=0) list[idx]={...list[idx],status:item.status,feedback:item.feedback,feedbackAt:item.feedbackAt,feedbackSentAt:item.feedbackSentAt};
+    await s.setJSON('voices-index',list);
+    return json(200,{ok:true,item});
+  }
+
+  if (event.httpMethod === 'DELETE') {
+    const id=event.queryStringParameters&&event.queryStringParameters.id;
+    if(!id)return json(400,{error:'Falta el identificador.'});
+    await s.delete(`voice:${id}`);
+    const list=(await s.get('voices-index',{type:'json'}))||[];
+    await s.setJSON('voices-index',list.filter(x=>x.id!==id));
+    return json(200,{ok:true});
+  }
+
+  return {statusCode:405,headers:CORS,body:'Método no permitido'};
+};
