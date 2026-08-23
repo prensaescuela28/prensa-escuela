@@ -410,3 +410,85 @@ a { color: inherit; }
 .admin-nav{display:flex;gap:8px;overflow-x:auto;padding-bottom:3px;scrollbar-width:thin}.admin-nav a{white-space:nowrap;text-decoration:none;padding:8px 11px;border:1px solid var(--line,#d4ccbf);border-radius:999px;background:#fff;color:inherit;font-size:.9rem}.admin-nav a:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.08)}
 #admin-voice-history{border-left:4px solid #888}.voice-status{margin:.45rem 0}.admin-page > .admin-panel[hidden]{display:none!important}
 @media(max-width:700px){.admin-tools{top:0}.admin-nav{margin-right:-8px}.admin-nav a{font-size:.82rem;padding:7px 9px}.admin-page{padding-left:14px;padding-right:14px}}
+
+
+/* --- Navegación por secciones del panel administrativo --- */
+#dashboard{position:relative}
+#dashboard .admin-tools{
+  float:left;
+  width:230px;
+  box-sizing:border-box;
+  position:sticky;
+  top:18px;
+  z-index:10;
+  background:var(--paper,#f7f4ee);
+  padding:0 14px 18px 0;
+  margin:24px 20px 40px 0;
+  border-right:1px solid var(--line,#d9d2c5);
+  border-bottom:0;
+  box-shadow:none;
+}
+.admin-sidebar-title{
+  font:700 10px 'Space Mono',monospace;
+  letter-spacing:.12em;
+  color:var(--ink-soft);
+  margin:0 0 10px;
+}
+#dashboard .admin-nav{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  overflow:visible;
+  padding:0;
+}
+.admin-nav-item{
+  width:100%;
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  text-align:left;
+  border:1px solid transparent;
+  border-radius:7px;
+  background:transparent;
+  color:var(--ink);
+  padding:11px 12px;
+  font:600 13px 'Space Mono',monospace;
+  cursor:pointer;
+}
+.admin-nav-item span{font-family:'Source Serif 4',Georgia,serif;font-size:16px;font-weight:600}
+.admin-nav-item:hover{background:#fff;border-color:var(--line,#d9d2c5)}
+.admin-nav-item.is-active{
+  background:var(--ink);
+  color:var(--paper,#f7f4ee);
+  border-color:var(--ink);
+}
+#dashboard > .admin-panel{
+  margin-left:250px;
+  clear:none;
+}
+#dashboard > .admin-panel[hidden]{display:none!important}
+#dashboard > .stats-cards{
+  clear:both;
+}
+#dashboard > .admin-tools + .admin-panel{margin-top:0}
+@media(max-width:800px){
+  #dashboard .admin-tools{
+    float:none;
+    width:100%;
+    position:sticky;
+    top:0;
+    margin:16px 0;
+    padding:10px 0;
+    border-right:0;
+    border-bottom:1px solid var(--line,#d9d2c5);
+    z-index:30;
+  }
+  #dashboard .admin-nav{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:6px;
+  }
+  .admin-nav-item{padding:9px 10px}
+  #dashboard > .admin-panel{margin-left:0}
+}
