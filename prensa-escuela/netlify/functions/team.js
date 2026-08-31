@@ -3,7 +3,7 @@ const CORS={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'Co
 const store=()=>getStore(process.env.SITE_ID && process.env.BLOBS_TOKEN ? {name:'articles',siteID:process.env.SITE_ID,token:process.env.BLOBS_TOKEN,consistency:'strong'} : {name:'articles',consistency:'strong'});
 const auth=e=>(e.headers['x-press-password']||e.headers['X-Press-Password'])===process.env.PRESS_PASSWORD&&!!process.env.PRESS_PASSWORD;
 const DEFAULT={intro:'Prensa Normalista es un medio escolar construido con participación de la comunidad educativa.',coordinator:{name:'',role:'Docente coordinador',bio:'',hasPhoto:false},reporters:[],collaborators:[],hasGroupPhoto:false};
-function json(statusCode,body){return{statusCode,headers:{...CORS,'Content-Type':'application/json'},body:JSON.stringify(body)}}
+function json(statusCode,body){return{statusCode,headers:{...CORS,'Content-Type':'application/json','Cache-Control':'no-store, no-cache, must-revalidate'},body:JSON.stringify(body)}}
 exports.handler=async e=>{
  const s=store(); if(e.httpMethod==='OPTIONS')return{statusCode:200,headers:CORS,body:''};
  if(e.httpMethod==='GET'){

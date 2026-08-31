@@ -5,5 +5,5 @@ exports.handler=async event=>{
  const s=getStore(process.env.SITE_ID && process.env.BLOBS_TOKEN ? {name:'articles',siteID:process.env.SITE_ID,token:process.env.BLOBS_TOKEN,consistency:'strong'} : {name:'articles',consistency:'strong'});
  const r=await s.getWithMetadata(`team:${kind}-image`,{type:'arrayBuffer'});
  if(!r)return{statusCode:404,body:'Imagen no encontrada.'};
- return{statusCode:200,headers:{'Content-Type':(r.metadata&&r.metadata.contentType)||'image/jpeg','Cache-Control':'public, max-age=3600'},body:Buffer.from(r.data).toString('base64'),isBase64Encoded:true};
+ return{statusCode:200,headers:{'Content-Type':(r.metadata&&r.metadata.contentType)||'image/jpeg','Cache-Control':'no-cache, must-revalidate'},body:Buffer.from(r.data).toString('base64'),isBase64Encoded:true};
 };
