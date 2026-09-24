@@ -492,3 +492,5 @@ a { color: inherit; }
   .admin-nav-item{padding:9px 10px}
   #dashboard > .admin-panel{margin-left:0}
 }
+.lab-group-heading{font-family:'Playfair Display',Georgia,serif;font-size:18px;margin:26px 0 12px;padding-top:14px;border-top:1px solid var(--rule)}.lab-group-heading:first-child{border-top:0;padding-top:0;margin-top:0}
+.lab-credit{font-style:italic;font-size:10px;color:var(--ink-soft);opacity:.65;text-align:right;margin:18px 0 0}

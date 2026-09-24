@@ -58,6 +58,11 @@
   status = 200
 
 [[redirects]]
+  from = "/territorio/*"
+  to = "/.netlify/functions/territory-article?id=:splat"
+  status = 200
+
+[[redirects]]
   from = "/api/territory"
   to = "/.netlify/functions/territory"
   status = 200
